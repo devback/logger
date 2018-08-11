@@ -12,6 +12,14 @@ const LOGGER_LEVELS = {
     debug: 4
 };
 
+const LOGGER_PRETTY_PRINT = winston.format(info => {
+    if(typeof(info.message) === 'object') {
+        info.message = JSON.stringify(info.message, null, 4);
+    }
+
+    return info;
+});
+
 const LOGGER_MSG_TEMPLATE = winston.format.printf(info => {
     let ts = info.timestamp ? info.timestamp.slice(0, 19).replace('T', ' ') + ' ' : '',
         lb = info.label ? '[' + info.label + '] ' : '';
@@ -30,13 +38,11 @@ winston.config.addColors({
     error: 'red',
     warning: 'yellow',
     info: 'green',
-    debug: 'gray'
+    debug: 'blue'
 });
 
 function createLogger(options) {
-    options = prepareOptions(options);
-
-    let logger = winston.createLogger(options);
+    let logger = winston.createLogger(prepareOptions(options));
 
     // слушаем ошибки логгера чтобы игнорировать exit в случае ошибки
     logger.on('error', () => {});
@@ -80,7 +86,10 @@ function prepareOptions(options) {
             token: GLOBAL_OPTIONS.telegram.token,
             chats: GLOBAL_OPTIONS.telegram.chats,
             level: 'emerg',
-            format: LOGGER_MSG_TEMPLATE
+            format: winston.format.combine(
+                LOGGER_PRETTY_PRINT(),
+                LOGGER_MSG_TEMPLATE
+            )
         }));
     }
 
@@ -93,7 +102,10 @@ function prepareOptions(options) {
         maxSize: '10m',
         maxFiles: '30d',
         level: 'warning',
-        format: LOGGER_MSG_TEMPLATE
+        format: winston.format.combine(
+            LOGGER_PRETTY_PRINT(),
+            LOGGER_MSG_TEMPLATE
+        )
     }));
 
     if(process.env.NODE_ENV !== 'production') {
@@ -102,6 +114,7 @@ function prepareOptions(options) {
             level: 'debug',
             handleExceptions: true,
             format: winston.format.combine(
+                LOGGER_PRETTY_PRINT(),
                 winston.format.colorize(),
                 winston.format.align(),
                 LOGGER_MSG_TEMPLATE
