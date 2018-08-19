@@ -20,6 +20,6 @@
     "async": "^2.6.1",
     "request": "^2.87.0",
     "winston": "^3.0.0",
-    "winston-daily-rotate-file": "^3.3.0"
+    "winston-daily-rotate-file": "^3.3.1"
   }
 }
